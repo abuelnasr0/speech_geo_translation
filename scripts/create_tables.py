@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0,"./")
+
+sys.path.insert(0, "./")
 
 from speech_geo_translation.database.database_api import DatabaseAPI
 

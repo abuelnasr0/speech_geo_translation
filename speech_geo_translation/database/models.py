@@ -3,8 +3,10 @@ from sqlalchemy import String, Float, BigInteger, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class Complaint(Base):
     __tablename__ = "complaint"
@@ -12,7 +14,9 @@ class Complaint(Base):
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    complaint_type: Mapped[int] = mapped_column(BigInteger, ForeignKey("complaint_type.id"))
+    complaint_type: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("complaint_type.id")
+    )
 
 
 class ComplaintType(Base):
