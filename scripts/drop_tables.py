@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,"/home/mohamed/Mohamed/Vodafone project/projects/app")
+sys.path.insert(0,"./")
 
 from speech_geo_translation.database.database_api import DatabaseAPI
 
