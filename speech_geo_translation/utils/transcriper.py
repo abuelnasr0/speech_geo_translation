@@ -26,4 +26,4 @@ class Transcriper:
             return self.en_model.transcribe([audio_path])[0]
 
     def transcribe(self, audio_path: str, language: Language = Language.AR):
-        return self.__call__(audio_path=audio_path)
+        return self.__call__(audio_path=audio_path, language=language)
