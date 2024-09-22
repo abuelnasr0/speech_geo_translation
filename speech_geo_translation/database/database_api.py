@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, insert
 
 import os
 from dotenv import load_dotenv
-from speech_geo_translation.database.models import Complaint, ComplaintType
+from speech_geo_translation.database.models import Customer, Complaint, ComplaintLocation, ServiceArea, Towers
 
 load_dotenv()
 
@@ -16,7 +16,6 @@ DB_URI = "mysql+mysqlconnector://{}:{}@{}:{}/{}".format(
     DB_USER, DB_PASSWD, DB_HOST, DB_PORT, DB_NAME
 )
 
-
 class DatabaseAPI(object):
     def __new__(cls):
         # Singlton. only one instance will be created.
@@ -28,14 +27,21 @@ class DatabaseAPI(object):
         self.engine = create_engine(DB_URI, echo=True)
 
     def creat_tables(self):
-        ComplaintType.metadata.create_all(bind=self.engine)
+        Customer.metadata.create_all(bind=self.engine)
         Complaint.metadata.create_all(bind=self.engine)
+        ComplaintLocation.metadata.create_all(bind=self.engine)
+        ServiceArea.metadata.create_all(bind=self.engine)
+        Towers.metadata.create_all(bind=self.engine)
+
 
         # Here add any complaint type
 
     def drop_tables(self):
+        Customer.metadata.drop_all(bind=self.engine)
         Complaint.metadata.drop_all(bind=self.engine)
-        ComplaintType.metadata.drop_all(bind=self.engine)
+        ComplaintLocation.metadata.drop_all(bind=self.engine)
+        ServiceArea.metadata.drop_all(bind=self.engine)
+        Towers.metadata.drop_all(bind=self.engine)
 
     def add_complaint(self, location):
         # Add complaint to the database
