@@ -16,7 +16,6 @@ DB_URI = "mysql+mysqlconnector://{}:{}@{}:{}/{}".format(
     DB_USER, DB_PASSWD, DB_HOST, DB_PORT, DB_NAME
 )
 
-n
 class DatabaseAPI(object):
     def __new__(cls):
         # Singlton. only one instance will be created.
