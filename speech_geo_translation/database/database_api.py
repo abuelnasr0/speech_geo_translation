@@ -1,8 +1,10 @@
 from sqlalchemy import create_engine, insert
+import datetime
 
 import os
 from dotenv import load_dotenv
-from speech_geo_translation.database.models import Customer, Complaint, ComplaintLocation, ServiceArea, Towers
+from .models import Customer, Governorate, Qism, ServiceArea, Complaint
+from .models import STRINGS_LINGTH
 
 load_dotenv()
 
@@ -16,6 +18,7 @@ DB_URI = "mysql+mysqlconnector://{}:{}@{}:{}/{}".format(
     DB_USER, DB_PASSWD, DB_HOST, DB_PORT, DB_NAME
 )
 
+
 class DatabaseAPI(object):
     def __new__(cls):
         # Singlton. only one instance will be created.
@@ -25,26 +28,52 @@ class DatabaseAPI(object):
 
     def __init__(self):
         self.engine = create_engine(DB_URI, echo=True)
+        self.initialized = False
 
     def creat_tables(self):
         Customer.metadata.create_all(bind=self.engine)
-        Complaint.metadata.create_all(bind=self.engine)
-        ComplaintLocation.metadata.create_all(bind=self.engine)
+        Governorate.metadata.create_all(bind=self.engine)
+        Qism.metadata.create_all(bind=self.engine)
         ServiceArea.metadata.create_all(bind=self.engine)
-        Towers.metadata.create_all(bind=self.engine)
+        Complaint.metadata.create_all(bind=self.engine)
 
 
-        # Here add any complaint type
+    def initialize_tables(self, govs, qisms, service_areas):
+        self.creat_tables()
+        # Add Govs, Qisms, ServiceAreas
+        with self.engine.connect() as connection: 
+            # Inserting govs
+            connection.execute(Governorate.__table__.insert(), govs)
+            connection.commit()
+
+            # Inserting qisms, markaz
+            connection.execute(Qism.__table__.insert(), qisms)
+            connection.commit()
+
+            # Inserting qisms, markaz
+            connection.execute(ServiceArea.__table__.insert(), service_areas)
+            connection.commit()
+
+        self.initialized = True
+        
 
     def drop_tables(self):
         Customer.metadata.drop_all(bind=self.engine)
-        Complaint.metadata.drop_all(bind=self.engine)
-        ComplaintLocation.metadata.drop_all(bind=self.engine)
+        Governorate.metadata.drop_all(bind=self.engine)
+        Qism.metadata.drop_all(bind=self.engine)
         ServiceArea.metadata.drop_all(bind=self.engine)
-        Towers.metadata.drop_all(bind=self.engine)
+        Complaint.metadata.drop_all(bind=self.engine)
 
-    def add_complaint(self, location):
+    def add_complaint(self, longitude, latitude, service_area_id):
+        curr_complaint = [{
+            "longitude": longitude,
+            "latitude": latitude,
+            "service_area_id": service_area_id,
+            "time": datetime.datetime.now()
+        }]
         # Add complaint to the database
-        print(location)
-        print("should be added")
-        pass
+        with self.engine.connect() as connection: 
+            # Inserting govs
+            connection.execute(Complaint.__table__.insert(), curr_complaint)
+            connection.commit()
+
