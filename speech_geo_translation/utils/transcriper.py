@@ -13,10 +13,10 @@ class Transcriper:
         self,
     ):
         self.ar_model = nemo_asr.models.EncDecCTCModelBPE.restore_from(
-            "/home/mohamed/Mohamed/Vodafone project/Conformer-CTC-L_spe128_ar-AR_3.0.nemo"
+            "/home/mohamed/Mohamed/Vodafone_project/conformer_ar.nemo"
         )
         self.en_model = nemo_asr.models.EncDecCTCModelBPE.restore_from(
-            "/home/mohamed/Mohamed/Vodafone project/stt_en_conformer_ctc_large.nemo"
+            "/home/mohamed/Mohamed/Vodafone_project/conformer_en.nemo"
         )
 
     def __call__(self, audio_path: str, language: Language = Language.AR):
