@@ -25,7 +25,7 @@ class LocationClassifier:
             "gov_en": location_data["GOV_NAME_E"].values[0],
             "sec_en": location_data["SEC_NAME_E"].values[0],
             "ssec_en": location_data["SSEC_NAME_"].values[0],
-            "gov_id": location_data["GOV_CODE"].values[0],
-            "sec_id": location_data["SEC_CODE"].values[0],
-            "ssec_id": location_data["SSEC_CODE"].values[0],
+            "gov_id": int(location_data["GOV_CODE"].values[0]),
+            "sec_id": int(location_data["SEC_CODE"].values[0]),
+            "ssec_id": int(location_data["SSEC_CODE"].values[0]),
         }
