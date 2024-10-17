@@ -4,12 +4,80 @@ from fuzzywuzzy import process
 import itertools
 import operator
 
-WORDS_SET_PKL_PATH = (
-    "/home/mohamed/Mohamed/Vodafone_project/projects/cities/address_wrods_set.pkl"
-)
-PROBS_DICTS_PKL_PATH = (
-    "/home/mohamed/Mohamed/Vodafone_project/projects/cities/forward_bacward_probs.pkl"
-)
+WORDS_SET_PKL_PATH = "/home/mohamed/Mohamed/Vodafone_project/projects/app/files/spell_corrector_files/address_wrods_set.pkl"
+PROBS_DICTS_PKL_PATH = "/home/mohamed/Mohamed/Vodafone_project/projects/app/files/spell_corrector_files/forward_bacward_probs.pkl"
+
+GOVS_SET = {
+    "الجيزه",
+    "قنا",
+    "القاهرة",
+    "اسيوط",
+    "الاسكندرية",
+    "دمياط",
+    "كفر الشيخ",
+    "الدقهلية",
+    "بورسعيد",
+    "الاسماعلية",
+    "شمال",
+    "سيناء",
+    "الوادي",
+    "الجديد",
+    "الاقصر",
+    "الفيوم",
+    "سوهاج",
+    "البحيرة",
+    "جنوب",
+    "سيناء",
+    "السويس",
+    "الشرقية",
+    "المنوفية",
+    "القليوبية",
+    "بنى",
+    "سويف",
+    "المنيا",
+    "اسوان",
+    "البحر",
+    "الاحمر",
+    "الغربية",
+    "جيزه",
+    "قاهرة",
+    "اسكندرية",
+    "دمياط",
+    "كفر",
+    "الشيخ",
+    "دقهلية",
+    "بورسعيد",
+    "اسماعلية",
+    "شمال",
+    "سيناء",
+    "الوادي" "الجديد",
+    "اقصر",
+    "فيوم",
+    "بحيرة",
+    "سويس",
+    "شرقية",
+    "منوفية",
+    "قليوبية",
+    "بنى سويف",
+    "منيا",
+    "اسوان",
+    "بحر",
+    "احمر",
+    "مطروح",
+    "غربية",
+}
+
+
+class Chunk:
+    def __init__(self, chunk_size, words_list, score, words_score):
+        self.chunk_size = chunk_size
+        self.words_list = words_list
+        self.score = score
+        self.words_score = words_score
+
+        self.last_words_list = words_list[-chunk_size + 1 :]
+        self.first_words_list = words_list[: chunk_size - 1]
+        self.sentence = " ".join(words_list)
 
 
 class SpellingCorrector:
@@ -32,7 +100,7 @@ class SpellingCorrector:
     @staticmethod
     def get_potential_words_prob(sentence: str, words_set: set[str], limit: int = 10):
         def inverse_dist(a, b):
-            x = fuzzywuzzy.StringMatcher.distance(a, b, weights=(3, 2, 2))
+            x = fuzzywuzzy.StringMatcher.distance(a, b, weights=(1, 6, 3))
             if x == 0:
                 return 1.0
             return 1 / (x)
@@ -40,10 +108,13 @@ class SpellingCorrector:
         input_words_list = sentence.split(" ")
         best_matchs_list = []
         for word in input_words_list:
-            best_match = process.extractBests(
+            best_match1 = process.extractBests(
                 word, words_set, scorer=inverse_dist, limit=limit
             )
-            best_matchs_list.append(best_match)
+            best_match2 = process.extractBests(
+                word, GOVS_SET, scorer=inverse_dist, limit=limit // 3
+            )
+            best_matchs_list.append(best_match1 + best_match2)
 
         return best_matchs_list
 
@@ -59,8 +130,8 @@ class SpellingCorrector:
             chunk,
             forward_probabilities,
             backward_probabilities,
-            top_k=10,
-            spell_probs_weight=1.0,
+            top_k=5,
+            spell_probs_weight=5.0,
         ):
 
             chunk_size = len(chunk)
@@ -148,11 +219,12 @@ class SpellingCorrector:
         return curr_sequnces
 
     def __call__(
-        self, sentence: str, potential_words_limit=10, chunk_size=4, beam_size=6
+        self, sentence: str, potential_words_limit=10, chunk_size=3, beam_size=6
     ):
         potential_words = self.get_potential_words_prob(
             sentence, self.words_set, limit=potential_words_limit
         )
+        # print(potential_words[-1])
         potential_sentences = self.get_potential_sentences_probabilities(
             potential_words,
             self.forward_probabilities,
@@ -160,4 +232,23 @@ class SpellingCorrector:
             chunk_size=chunk_size,
             beam_size=beam_size,
         )
-        return potential_sentences
+        ref_words = (
+            sentence.replace("أ", "ا").replace("إ", "ا").replace("آ", "ا").split(" ")
+        )
+        potential_sentence = potential_sentences[0]
+        sen = (
+            potential_sentence[0].replace("أ", "ا").replace("إ", "ا").replace("آ", "ا")
+        )
+        print("here", sen)
+        substitutions = sum(
+            1 for ref, hyp in zip(ref_words, sen.split(" ")) if ref != hyp
+        )
+        if substitutions == 0:
+            return potential_sentence[0]
+        elif substitutions <= 2:
+            if potential_sentence[1] > 1.0:
+                return potential_sentence[0]
+        else:
+            return None
+
+        return None

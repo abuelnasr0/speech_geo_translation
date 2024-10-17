@@ -1,9 +1,25 @@
 from sqlalchemy import create_engine, insert
+from sqlalchemy import text
 import datetime
 
 import os
 from dotenv import load_dotenv
-from .models import Customer, Governorate, Qism, ServiceArea, Complaint
+from .models import (
+    Customer,
+    Governorate,
+    Qism,
+    ServiceArea,
+    Complaint,
+    GovsQhrCounts,
+    QismsQhrCounts,
+    AreasQhrCounts,
+)
+from .models import (
+    EVENT_STRING,
+    COUNTING_GOVS_FUN_STRING,
+    COUNTING_QISMS_FUN_STRING,
+    COUNTING_AREAS_FUN_STRING,
+)
 from .models import STRINGS_LINGTH
 
 load_dotenv()
@@ -30,18 +46,35 @@ class DatabaseAPI(object):
         self.engine = create_engine(DB_URI, echo=True)
         self.initialized = False
 
-    def creat_tables(self):
+    def create_tables(self):
         Customer.metadata.create_all(bind=self.engine)
         Governorate.metadata.create_all(bind=self.engine)
         Qism.metadata.create_all(bind=self.engine)
         ServiceArea.metadata.create_all(bind=self.engine)
         Complaint.metadata.create_all(bind=self.engine)
+        GovsQhrCounts.metadata.create_all(bind=self.engine)
+        QismsQhrCounts.metadata.create_all(bind=self.engine)
+        AreasQhrCounts.metadata.create_all(bind=self.engine)
 
+    def set_counting_event(self):
+        with self.engine.connect() as connection:
+            connection.execute(text(COUNTING_GOVS_FUN_STRING))
+            connection.execute(text(COUNTING_QISMS_FUN_STRING))
+            connection.execute(text(COUNTING_AREAS_FUN_STRING))
 
-    def initialize_tables(self, govs, qisms, service_areas):
-        self.creat_tables()
+            connection.execute(text(EVENT_STRING))
+
+    def db_startup(self):
+        self.create_tables()
+        self.set_counting_event()
+
+    def initialize_tables(self, govs=None, qisms=None, service_areas=None):
         # Add Govs, Qisms, ServiceAreas
-        with self.engine.connect() as connection: 
+        if govs == None:
+            self.initialized = False
+            return
+
+        with self.engine.connect() as connection:
             # Inserting govs
             connection.execute(Governorate.__table__.insert(), govs)
             connection.commit()
@@ -55,7 +88,6 @@ class DatabaseAPI(object):
             connection.commit()
 
         self.initialized = True
-        
 
     def drop_tables(self):
         Customer.metadata.drop_all(bind=self.engine)
@@ -65,15 +97,16 @@ class DatabaseAPI(object):
         Complaint.metadata.drop_all(bind=self.engine)
 
     def add_complaint(self, longitude, latitude, service_area_id):
-        curr_complaint = [{
-            "longitude": longitude,
-            "latitude": latitude,
-            "service_area_id": service_area_id,
-            "time": datetime.datetime.now()
-        }]
+        curr_complaint = [
+            {
+                "longitude": longitude,
+                "latitude": latitude,
+                "service_area_id": service_area_id,
+                "time": datetime.datetime.now(),
+            }
+        ]
         # Add complaint to the database
-        with self.engine.connect() as connection: 
+        with self.engine.connect() as connection:
             # Inserting govs
             connection.execute(Complaint.__table__.insert(), curr_complaint)
             connection.commit()
-

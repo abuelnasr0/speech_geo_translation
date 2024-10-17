@@ -16,6 +16,8 @@ class AddressTranslator:
         if geocode_result:
             # Extract latitude and longitude
             location = geocode_result[0]["geometry"]["location"]
+            if location == None:
+                return None
             latitude = location["lat"]
             longitude = location["lng"]
 
